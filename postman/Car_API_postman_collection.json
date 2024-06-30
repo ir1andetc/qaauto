@@ -1,0 +1,798 @@
+{
+	"info": {
+		"_postman_id": "97135257-9b04-444b-b3be-b5f71c78007e",
+		"name": "Car API Collection",
+		"description": "Collection for interacting with the Car API Add git integration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "createCustomer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"(function() {",
+							"    const tests = {",
+							"        basic: () => {",
+							"            pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+							"            pm.test(\"Response time is less than 1500ms\", () => pm.expect(pm.response.responseTime).to.be.below(1500));",
+							"            pm.test(\"Content-Type is application/json\", () => pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\"));",
+							"        },",
+							"        headers: () => {",
+							"            const headers = {",
+							"                server: \"nginx/1.18.0 (Ubuntu)\",",
+							"                \"x-powered-by\": \"Express\",",
+							"                \"access-control-allow-credentials\": \"true\"",
+							"            };",
+							"            Object.entries(headers).forEach(([key, value]) => pm.test(`Check ${key} header`, () => pm.expect(pm.response.headers.get(key)).to.eql(value)));",
+							"            pm.test(\"Check etag header\", () => pm.expect(pm.response.headers.get(\"etag\")).to.exist);",
+							"            pm.test(\"Check set-cookie header\", () => pm.expect(pm.response.headers.get(\"set-cookie\")).to.include(\"sid=\"));",
+							"        },",
+							"        body: () => {",
+							"            const jsonData = pm.response.json();",
+							"            pm.test(\"Response body contains userId\", () => pm.expect(jsonData.data).to.have.property(\"userId\").that.is.a('number'));",
+							"            pm.test(\"Response body contains photoFilename\", () => pm.expect(jsonData.data).to.have.property(\"photoFilename\").that.is.a('string'));",
+							"            pm.test(\"Response body contains distanceUnits\", () => pm.expect(jsonData.data).to.have.property(\"distanceUnits\").that.is.a('string'));",
+							"            pm.test(\"Response body contains currency\", () => pm.expect(jsonData.data).to.have.property(\"currency\").that.is.a('string'));",
+							"        },",
+							"        request: () => {",
+							"            const requestData = JSON.parse(pm.request.body.raw);",
+							"            const requestChecks = [\"name\", \"lastName\", \"email\", \"password\", \"repeatPassword\"].map(key => ({",
+							"                key,",
+							"                value: requestData[key]",
+							"            }));",
+							"            requestChecks.forEach(({key, value}) => pm.test(`Request ${key} is correctly sent`, () => pm.expect(requestData).to.have.property(key, value)));",
+							"            pm.test(\"Request password and repeatPassword match\", () => pm.expect(requestData.password).to.eql(requestData.repeatPassword));",
+							"            pm.test(\"Request content-length is correct\", () => pm.expect(pm.request.headers.get(\"content-length\")).to.eql(pm.request.body.raw.length.toString()));",
+							"        },",
+							"        network: () => {",
+							"            const jsonData = pm.response.json();",
+							"            if (jsonData.Network) {",
+							"                const networkData = jsonData.Network;",
+							"                pm.test(\"TLS protocol is TLSv1.3\", () => pm.expect(networkData.tls.protocol).to.eql(\"TLSv1.3\"));",
+							"                if (networkData.tls.peerCertificate) {",
+							"                    const certData = networkData.tls.peerCertificate;",
+							"                    pm.test(\"Peer certificate subject commonName is correct\", () => pm.expect(certData.subject.commonName).to.eql(\"forstudy.space\"));",
+							"                    pm.test(\"Peer certificate issuer organization is Let's Encrypt\", () => pm.expect(certData.issuer.organization).to.eql(\"Let's Encrypt\"));",
+							"                    pm.test(\"Peer certificate is currently valid\", () => {",
+							"                        const now = new Date();",
+							"                        const validFrom = new Date(certData.validFrom);",
+							"                        const validTo = new Date(certData.validTo);",
+							"                        pm.expect(now).to.be.within(validFrom, validTo);",
+							"                    });",
+							"                    pm.test(\"TLS certificate is valid\", () => {",
+							"                        pm.expect(certData).to.have.property(\"validFrom\");",
+							"                        pm.expect(certData).to.have.property(\"validTo\");",
+							"                    });",
+							"                }",
+							"            }",
+							"        },",
+							"        cookie: () => {",
+							"            const setCookieHeader = pm.response.headers.get('Set-Cookie');",
+							"            pm.test(\"Cookie 'sid' is present\", () => pm.expect(setCookieHeader).to.include('sid='));",
+							"            const pathPart = setCookieHeader.match(/Path=([^;]+);/);",
+							"            pm.test(\"Cookie 'sid' path is correct\", () => {",
+							"                pm.expect(pathPart).to.not.be.null;",
+							"                pm.expect(pathPart[1]).to.eql('/');",
+							"            });",
+							"        },",
+							"        performance: () => {",
+							"            pm.test(\"Response time is less than 1500ms\", () => pm.expect(pm.response.responseTime).to.be.below(1500));",
+							"            pm.test(\"Response size is within limit\", () => pm.expect(parseInt(pm.response.headers.get('content-length'))).to.be.below(200));",
+							"        },",
+							"        additional: () => {",
+							"            pm.test(\"User-Agent is PostmanRuntime\", () => pm.expect(pm.request.headers.get('user-agent')).to.include('PostmanRuntime'));",
+							"            pm.test(\"Content-Encoding supports gzip\", () => pm.expect(pm.request.headers.get('accept-encoding')).to.include('gzip'));",
+							"            pm.test(\"Connection is keep-alive\", () => pm.expect(pm.request.headers.get('connection')).to.eql('keep-alive'));",
+							"            pm.test(\"Request is using HTTPS\", () => pm.expect(pm.request.url.protocol).to.eql('https'));",
+							"            const jsonData = pm.response.json();",
+							"            pm.test(\"No unexpected fields in response body\", () => pm.expect(jsonData.data).to.not.have.any.keys('unexpectedField'));",
+							"        }",
+							"    };",
+							"    Object.values(tests).forEach(test => test());",
+							"})();"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"id": "715b6107-2c6a-4b97-b319-44b03f3454a6"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Get all collection variables",
+							"const allVariables = pm.variables.toObject();",
+							"",
+							"// Iterate through all collection variables and delete them",
+							"Object.keys(allVariables).forEach(variable => {",
+							"    pm.variables.unset(variable);",
+							"});",
+							"",
+							"// Log the cleared variables",
+							"console.log('Cleared collection variables:', allVariables);",
+							"",
+							"(function() {",
+							"    const generateVariables = () => {",
+							"        const firstName = pm.variables.replaceIn('{{$randomFirstName}}');",
+							"        pm.collectionVariables.set(\"randomFirstName\", firstName);",
+							"        const lastName = pm.variables.replaceIn('{{$randomLastName}}');",
+							"        pm.collectionVariables.set(\"randomLastName\", lastName);",
+							"        const email = pm.variables.replaceIn('{{$randomEmail}}');",
+							"        pm.collectionVariables.set(\"randomEmail\", email);",
+							"        const password = pm.variables.replaceIn('{{$randomPassword}}');",
+							"        pm.collectionVariables.set(\"randomPassword\", password);",
+							"        const jsonObject = {",
+							"            name: firstName,",
+							"            lastName: lastName,",
+							"            email: email,",
+							"            password: password,",
+							"            repeatPassword: password",
+							"        };",
+							"        console.log(JSON.stringify(jsonObject, null, 2));",
+							"        pm.collectionVariables.set(\"signupRequestBody\", JSON.stringify(jsonObject));",
+							"    };",
+							"    pm.collectionVariables.clear();",
+							"    generateVariables();",
+							"})();"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"id": "81631e4f-5da1-4080-9d6b-fc14e67368a5"
+					}
+				}
+			],
+			"id": "ef3f4c66-26d1-48bd-902d-587ceb5ba0a4",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{signupRequestBody}}"
+				},
+				"url": "{{baseUrl}}/auth/signup"
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch Car Brands",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0b29d80f-2cea-47a0-9ab5-ede1751f037b",
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"",
+							"// Check if there are any brands in the response",
+							"if (jsonData.data.length > 0) {",
+							"    // Pick a random brand from the list",
+							"    var randomBrand = jsonData.data[Math.floor(Math.random() * jsonData.data.length)];",
+							"    pm.collectionVariables.set(\"carBrandId\", randomBrand.id);",
+							"    pm.collectionVariables.set(\"carBrandName\", randomBrand.title);",
+							"} else {",
+							"    throw new Error(\"No brands found in the response.\");",
+							"}",
+							"",
+							"(function() {",
+							"    const tests = {",
+							"        basic: () => {",
+							"            pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+							"            pm.test(\"Response time is less than 1500ms\", () => pm.expect(pm.response.responseTime).to.be.below(1500));",
+							"            pm.test(\"Content-Type is application/json\", () => pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\"));",
+							"        },",
+							"        headers: () => {",
+							"            const headers = {",
+							"                server: \"nginx/1.18.0 (Ubuntu)\",",
+							"                \"x-powered-by\": \"Express\",",
+							"                \"access-control-allow-credentials\": \"true\"",
+							"            };",
+							"            Object.entries(headers).forEach(([key, value]) => pm.test(`Check ${key} header`, () => pm.expect(pm.response.headers.get(key)).to.eql(value)));",
+							"            pm.test(\"Check etag header\", () => pm.expect(pm.response.headers.get(\"etag\")).to.exist);",
+							"        },",
+							"        body: () => {",
+							"            const jsonData = pm.response.json();",
+							"            const brands = [\"Audi\", \"BMW\", \"Ford\", \"Porsche\", \"Fiat\"];",
+							"            const receivedBrands = jsonData.data.map(brand => brand.title);",
+							"            pm.test(\"Response body contains expected car brands\", () => pm.expect(receivedBrands).to.have.members(brands));",
+							"            jsonData.data.forEach(brand => pm.test(`Brand ${brand.title} (ID: ${brand.id}) has id, title, and logoFilename`, () => pm.expect(brand).to.have.keys(['id', 'title', 'logoFilename'])));",
+							"        },",
+							"        network: () => {",
+							"            const jsonData = pm.response.json();",
+							"            if (jsonData.Network) {",
+							"                const networkData = jsonData.Network;",
+							"                pm.test(\"TLS protocol is TLSv1.3\", () => pm.expect(networkData.tls.protocol).to.eql(\"TLSv1.3\"));",
+							"                if (networkData.tls.peerCertificate) {",
+							"                    const certData = networkData.tls.peerCertificate;",
+							"                    pm.test(\"Peer certificate subject commonName is correct\", () => pm.expect(certData.subject.commonName).to.eql(\"forstudy.space\"));",
+							"                    pm.test(\"Peer certificate issuer organization is Let's Encrypt\", () => pm.expect(certData.issuer.organization).to.eql(\"Let's Encrypt\"));",
+							"                    pm.test(\"Peer certificate is currently valid\", () => {",
+							"                        const now = new Date();",
+							"                        const validFrom = new Date(certData.validFrom);",
+							"                        const validTo = new Date(certData.validTo);",
+							"                        pm.expect(now).to.be.within(validFrom, validTo);",
+							"                    });",
+							"                    pm.test(\"TLS certificate is valid\", () => {",
+							"                        pm.expect(certData).to.have.property(\"validFrom\");",
+							"                        pm.expect(certData).to.have.property(\"validTo\");",
+							"                    });",
+							"                }",
+							"            }",
+							"        },",
+							"        additional: () => {",
+							"            pm.test(\"User-Agent is PostmanRuntime\", () => pm.expect(pm.request.headers.get('user-agent')).to.include('PostmanRuntime'));",
+							"            pm.test(\"Content-Encoding supports gzip\", () => pm.expect(pm.request.headers.get('accept-encoding')).to.include('gzip'));",
+							"            pm.test(\"Connection is keep-alive\", () => pm.expect(pm.request.headers.get('connection')).to.eql('keep-alive'));",
+							"            pm.test(\"Request is using HTTPS\", () => pm.expect(pm.request.url.protocol).to.eql('https'));",
+							"        },",
+							"        additionalBodyTest: () => {",
+							"            const jsonData = pm.response.json();",
+							"            const brands = jsonData.data.map(brand => brand.title);",
+							"            const receivedBrands = jsonData.data.map(brand => brand.title);",
+							"",
+							"            pm.test(\"Response body contains expected car brands\", () => {",
+							"                const expectedBrands = [\"Audi\", \"BMW\", \"Ford\", \"Porsche\", \"Fiat\"];",
+							"                pm.expect(receivedBrands).to.have.members(expectedBrands);",
+							"            });",
+							"",
+							"            jsonData.data.forEach(brand => {",
+							"                pm.test(`Brand ${brand.title} (ID: ${brand.id}) has id, title, and logoFilename`, () => {",
+							"                    pm.expect(brand).to.have.keys(['id', 'title', 'logoFilename']);",
+							"                    console.log(`Brand: ${brand.title}, ID: ${brand.id}`);",
+							"                });",
+							"            });",
+							"        }",
+							"    };",
+							"    Object.values(tests).forEach(test => test());",
+							"})();",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "01983cc1-c346-4206-91c6-0f3431deecb9",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{baseUrl}}/cars/brands"
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch Car Models",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "61b09240-7d05-4f0e-9874-bded80a27348",
+						"exec": [
+							"(function() {",
+							"    if (!pm.collectionVariables.get(\"carBrandId\")) {",
+							"        throw new Error(\"carBrandId is not set. Run 'Fetch Car Brands' request first.\");",
+							"    }",
+							"})();"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "a9b79bed-1bdf-467d-a583-168e1e527e5a",
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var brandId = pm.collectionVariables.get(\"carBrandId\");",
+							"",
+							"// Filter models by the given carBrandId",
+							"var models = jsonData.data.filter(m => m.carBrandId == brandId);",
+							"",
+							"// Check if any models exist for the given carBrandId",
+							"if (models.length > 0) {",
+							"    // Pick a random model from the filtered list",
+							"    var randomModel = models[Math.floor(Math.random() * models.length)];",
+							"    pm.collectionVariables.set(\"carModelId\", randomModel.id);",
+							"    pm.collectionVariables.set(\"carModelName\", randomModel.title);",
+							"} else {",
+							"    throw new Error(\"No model found for the given carBrandId.\");",
+							"}",
+							"",
+							"(function() {",
+							"    const tests = {",
+							"        basic: () => {",
+							"            pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+							"            pm.test(\"Response time is less than 1500ms\", () => pm.expect(pm.response.responseTime).to.be.below(1500));",
+							"            pm.test(\"Content-Type is application/json\", () => pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\"));",
+							"        },",
+							"        headers: () => {",
+							"            const headers = {",
+							"                server: \"nginx/1.18.0 (Ubuntu)\",",
+							"                \"x-powered-by\": \"Express\",",
+							"                \"access-control-allow-credentials\": \"true\"",
+							"            };",
+							"            Object.entries(headers).forEach(([key, value]) => pm.test(`Check ${key} header`, () => pm.expect(pm.response.headers.get(key)).to.eql(value)));",
+							"            pm.test(\"Check etag header\", () => pm.expect(pm.response.headers.get(\"etag\")).to.exist);",
+							"        },",
+							"        body: () => {",
+							"            const jsonData = pm.response.json();",
+							"            const brandId = pm.collectionVariables.get(\"carBrandId\");",
+							"            const models = jsonData.data.filter(m => m.carBrandId == brandId);",
+							"            if (models.length > 0) {",
+							"                const randomModel = models[Math.floor(Math.random() * models.length)];",
+							"                pm.collectionVariables.set(\"carModelId\", randomModel.id);",
+							"            } else {",
+							"                throw new Error(\"No model found for the given carBrandId.\");",
+							"            }",
+							"            const expectedModels = [\"TT\", \"R8\", \"Q7\", \"A6\", \"A8\", \"3\", \"5\", \"X5\", \"X6\", \"Z3\", \"Fiesta\", \"Focus\", \"Fusion\", \"Mondeo\", \"Sierra\", \"911\", \"Cayenne\", \"Panamera\", \"Palio\", \"Ducato\", \"Panda\", \"Punto\", \"Scudo\"];",
+							"            const receivedModels = jsonData.data.map(model => model.title);",
+							"            pm.test(\"Response body contains expected car models\", () => pm.expect(receivedModels).to.have.members(expectedModels));",
+							"            jsonData.data.forEach(model => pm.test(`Model ${model.title} (ID: ${model.id}) has id, carBrandId, and title`, () => pm.expect(model).to.have.keys(['id', 'carBrandId', 'title'])));",
+							"        },",
+							"        network: () => {",
+							"            const jsonData = pm.response.json();",
+							"            if (jsonData.Network) {",
+							"                const networkData = jsonData.Network;",
+							"                pm.test(\"TLS protocol is TLSv1.3\", () => pm.expect(networkData.tls.protocol).to.eql(\"TLSv1.3\"));",
+							"                if (networkData.tls.peerCertificate) {",
+							"                    const certData = networkData.tls.peerCertificate;",
+							"                    pm.test(\"Peer certificate subject commonName is correct\", () => pm.expect(certData.subject.commonName).to.eql(\"forstudy.space\"));",
+							"                    pm.test(\"Peer certificate issuer organization is Let's Encrypt\", () => pm.expect(certData.issuer.organization).to.eql(\"Let's Encrypt\"));",
+							"                    pm.test(\"Peer certificate is currently valid\", () => {",
+							"                        const now = new Date();",
+							"                        const validFrom = new Date(certData.validFrom);",
+							"                        const validTo = new Date(certData.validTo);",
+							"                        pm.expect(now).to.be.within(validFrom, validTo);",
+							"                    });",
+							"                    pm.test(\"TLS certificate is valid\", () => {",
+							"                        pm.expect(certData).to.have.property(\"validFrom\");",
+							"                        pm.expect(certData).to.have.property(\"validTo\");",
+							"                    });",
+							"                }",
+							"            }",
+							"        },",
+							"        additional: () => {",
+							"            pm.test(\"User-Agent is PostmanRuntime\", () => pm.expect(pm.request.headers.get('user-agent')).to.include('PostmanRuntime'));",
+							"            pm.test(\"Content-Encoding supports gzip\", () => pm.expect(pm.request.headers.get('accept-encoding')).to.include('gzip'));",
+							"            pm.test(\"Connection is keep-alive\", () => pm.expect(pm.request.headers.get('connection')).to.eql('keep-alive'));",
+							"            pm.test(\"Request is using HTTPS\", () => pm.expect(pm.request.url.protocol).to.eql('https'));",
+							"        }",
+							"    };",
+							"    Object.values(tests).forEach(test => test());",
+							"})();",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "01dd163b-3487-4d3d-9448-1aa25b76fb8b",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{baseUrl}}/cars/models"
+			},
+			"response": []
+		},
+		{
+			"name": "Post New Car",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"(function() {",
+							"    if (!pm.collectionVariables.get(\"carBrandId\") || !pm.collectionVariables.get(\"carModelId\")) {",
+							"        throw new Error(\"carBrandId or carModelId is not set. Run 'Fetch Car Brands' and 'Fetch Car Models' requests first.\");",
+							"    }",
+							"})();"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"id": "bbb73305-3fc4-488b-8467-f3823f3b40d1"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"response = pm.response.json();",
+							"let carId = response.data.id;",
+							"pm.collectionVariables.set(\"carId\", carId);",
+							"console.log(\"carid: \" + pm.collectionVariables.get(\"carId\"));",
+							"(function() {",
+							"    const tests = {",
+							"        basic: () => {",
+							"            pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+							"            pm.test(\"Response time is less than 1500ms\", () => pm.expect(pm.response.responseTime).to.be.below(1500));",
+							"            pm.test(\"Content-Type is application/json\", () => pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\"));",
+							"        },",
+							"        headers: () => {",
+							"            const headers = {",
+							"                server: \"nginx/1.18.0 (Ubuntu)\",",
+							"                \"x-powered-by\": \"Express\",",
+							"                \"access-control-allow-credentials\": \"true\"",
+							"            };",
+							"            Object.entries(headers).forEach(([key, value]) => pm.test(`Check ${key} header`, () => pm.expect(pm.response.headers.get(key)).to.eql(value)));",
+							"            pm.test(\"Check etag header\", () => pm.expect(pm.response.headers.get(\"etag\")).to.exist);",
+							"        },",
+							"        body: () => {",
+							"            const jsonData = pm.response.json();",
+							"            pm.collectionVariables.set(\"carId\", jsonData.data.id);",
+							"            pm.collectionVariables.set(\"initialMileage\", jsonData.data.initialMileage);",
+							"            const expectedKeys = ['id', 'carBrandId', 'carModelId', 'initialMileage', 'updatedMileageAt', 'carCreatedAt', 'mileage', 'brand', 'model', 'logo'];",
+							"            pm.test(\"Response body contains expected car data\", () => pm.expect(jsonData.data).to.have.keys(expectedKeys));",
+							"            pm.test(\"Car brand and model are correct\", () => {",
+							"                pm.expect(jsonData.data.carBrandId).to.eql(pm.collectionVariables.get(\"carBrandId\"));",
+							"                pm.expect(jsonData.data.carModelId).to.eql(pm.collectionVariables.get(\"carModelId\"));",
+							"                pm.expect(jsonData.data.brand).to.eql(pm.collectionVariables.get(\"carBrandName\"));",
+							"            });",
+							"        },",
+							"        network: () => {",
+							"            const jsonData = pm.response.json();",
+							"            if (jsonData.Network) {",
+							"                const networkData = jsonData.Network;",
+							"                pm.test(\"TLS protocol is TLSv1.3\", () => pm.expect(networkData.tls.protocol).to.eql(\"TLSv1.3\"));",
+							"                if (networkData.tls.peerCertificate) {",
+							"                    const certData = networkData.tls.peerCertificate;",
+							"                    pm.test(\"Peer certificate subject commonName is correct\", () => pm.expect(certData.subject.commonName).to.eql(\"forstudy.space\"));",
+							"                    pm.test(\"Peer certificate issuer organization is Let's Encrypt\", () => pm.expect(certData.issuer.organization).to.eql(\"Let's Encrypt\"));",
+							"                    pm.test(\"Peer certificate is currently valid\", () => {",
+							"                        const now = new Date();",
+							"                        const validFrom = new Date(certData.validFrom);",
+							"                        const validTo = new Date(certData.validTo);",
+							"                        pm.expect(now).to.be.within(validFrom, validTo);",
+							"                    });",
+							"                    pm.test(\"TLS certificate is valid\", () => {",
+							"                        pm.expect(certData).to.have.property(\"validFrom\");",
+							"                        pm.expect(certData).to.have.property(\"validTo\");",
+							"                    });",
+							"                }",
+							"            }",
+							"        },",
+							"        additional: () => {",
+							"            pm.test(\"User-Agent is PostmanRuntime\", () => pm.expect(pm.request.headers.get('user-agent')).to.include('PostmanRuntime'));",
+							"            pm.test(\"Content-Encoding supports gzip\", () => pm.expect(pm.request.headers.get('accept-encoding')).to.include('gzip'));",
+							"            pm.test(\"Connection is keep-alive\", () => pm.expect(pm.request.headers.get('connection')).to.eql('keep-alive'));",
+							"            pm.test(\"Request is using HTTPS\", () => pm.expect(pm.request.url.protocol).to.eql('https'));",
+							"        }",
+							"    };",
+							"    Object.values(tests).forEach(test => test());",
+							"})();"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"id": "90c43e53-73f6-4395-9bc3-7f0fd2d69e19"
+					}
+				}
+			],
+			"id": "a6016bba-3b6d-4225-a06e-b4296326d442",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"carBrandId\": {{carBrandId}},\n  \"carModelId\": {{carModelId}},\n  \"mileage\": {{$randomInt}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/cars"
+			},
+			"response": []
+		},
+		{
+			"name": "CreateAnExpenses",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"(function() {",
+							"    const initOrIncrementVariable = (variableName, initialValue, incrementValue) => {",
+							"        let value = pm.collectionVariables.get(variableName);",
+							"        value = value ? parseInt(value) + incrementValue : initialValue;",
+							"        pm.collectionVariables.set(variableName, value);",
+							"        return value;",
+							"    };",
+							"    const formatDate = date => {",
+							"        const d = new Date(date);",
+							"        return `${d.getFullYear()}-${(`0${d.getMonth() + 1}`).slice(-2)}-${(`0${d.getDate()}`).slice(-2)}`;",
+							"    };",
+							"    const initialMileage = pm.collectionVariables.get(\"initialMileage\");",
+							"    let mileage = initOrIncrementVariable(\"mileage\", initialMileage, 10);",
+							"    mileage = mileage <= initialMileage ? initialMileage + 10 : mileage;",
+							"    pm.collectionVariables.set(\"mileage\", mileage);",
+							"    const liters = initOrIncrementVariable(\"liters\", 11, 1);",
+							"    const totalCost = initOrIncrementVariable(\"totalCost\", 11, 1);",
+							"    const carId = pm.collectionVariables.get(\"carId\");",
+							"    if (!carId) throw new Error(\"carId is not set\");",
+							"    let updatedMileageAt = pm.collectionVariables.get(\"updatedMileageAt\");",
+							"    updatedMileageAt = updatedMileageAt ? updatedMileageAt : formatDate(new Date());",
+							"    pm.collectionVariables.set(\"updatedMileageAt\", updatedMileageAt);",
+							"    const carInfo = {",
+							"        carId,",
+							"        reportedAt: updatedMileageAt,",
+							"        mileage,",
+							"        liters,",
+							"        totalCost,",
+							"        forceMileage: false",
+							"    };",
+							"    pm.collectionVariables.set(\"carInfo\", JSON.stringify(carInfo));",
+							"    console.log(carInfo);",
+							"})();"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"id": "4e6aaff0-db5e-40f0-bf32-42dc3a66782f"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Fixed syntax error by removing 'const' declaration for 'tests' object",
+							"const basicTest = () => {",
+							"    pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+							"    pm.test(\"Response time is less than 1500ms\", () => pm.expect(pm.response.responseTime).to.be.below(1500));",
+							"    pm.test(\"Content-Type is application/json\", () => pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\"));",
+							"};",
+							"",
+							"const headersTest = () => {",
+							"    const headers = {",
+							"        server: \"nginx/1.18.0 (Ubuntu)\",",
+							"        \"x-powered-by\": \"Express\",",
+							"        \"access-control-allow-credentials\": \"true\"",
+							"    };",
+							"    Object.entries(headers).forEach(([key, value]) => pm.test(`Check ${key} header`, () => pm.expect(pm.response.headers.get(key)).to.eql(value)));",
+							"    pm.test(\"Check etag header\", () => pm.expect(pm.response.headers.get(\"etag\")).to.exist);",
+							"};",
+							"",
+							"const bodyTest = () => {",
+							"    const jsonData = pm.response.json();",
+							"    pm.test(\"Response body has status ok\", () => pm.expect(jsonData.status).to.eql(\"ok\"));",
+							"    pm.test(\"Response body contains expected expense data\", () => {",
+							"        const expectedKeys = ['carId', 'reportedAt', 'liters', 'id', 'mileage', 'totalCost'];",
+							"        pm.expect(jsonData.data).to.have.keys(expectedKeys);",
+							"        pm.expect(jsonData.data.carId).to.eql(pm.collectionVariables.get(\"carId\"));",
+							"        pm.expect(jsonData.data.reportedAt).to.eql(pm.collectionVariables.get(\"updatedMileageAt\"));",
+							"        pm.expect(jsonData.data.mileage).to.eql(pm.collectionVariables.get(\"mileage\"));",
+							"        pm.expect(jsonData.data.liters).to.eql(pm.collectionVariables.get(\"liters\"));",
+							"        pm.expect(jsonData.data.totalCost).to.eql(pm.collectionVariables.get(\"totalCost\"));",
+							"    });",
+							"};",
+							"",
+							"const networkTest = () => {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.Network) {",
+							"        const networkData = jsonData.Network;",
+							"        pm.test(\"TLS protocol is TLSv1.3\", () => pm.expect(networkData.tls.protocol).to.eql(\"TLSv1.3\"));",
+							"        if (networkData.tls.peerCertificate) {",
+							"            const certData = networkData.tls.peerCertificate;",
+							"            pm.test(\"Peer certificate subject commonName is correct\", () => pm.expect(certData.subject.commonName).to.eql(\"forstudy.space\"));",
+							"            pm.test(\"Peer certificate issuer organization is Let's Encrypt\", () => pm.expect(certData.issuer.organization).to.eql(\"Let's Encrypt\"));",
+							"            pm.test(\"Peer certificate is currently valid\", () => {",
+							"                const now = new Date();",
+							"                const validFrom = new Date(certData.validFrom);",
+							"                const validTo = new Date(certData.validTo);",
+							"                pm.expect(now).to.be.within(validFrom, validTo);",
+							"            });",
+							"            pm.test(\"TLS certificate is valid\", () => {",
+							"                pm.expect(certData).to.have.property(\"validFrom\");",
+							"                pm.expect(certData).to.have.property(\"validTo\");",
+							"            });",
+							"        }",
+							"    }",
+							"};",
+							"",
+							"const additionalTest = () => {",
+							"    pm.test(\"User-Agent is PostmanRuntime\", () => pm.expect(pm.request.headers.get('user-agent')).to.include('PostmanRuntime'));",
+							"    pm.test(\"Content-Encoding supports gzip\", () => pm.expect(pm.request.headers.get('accept-encoding')).to.include('gzip'));",
+							"    pm.test(\"Connection is keep-alive\", () => pm.expect(pm.request.headers.get('connection')).to.eql('keep-alive'));",
+							"    pm.test(\"Request is using HTTPS\", () => pm.expect(pm.request.url.protocol).to.eql('https'));",
+							"};",
+							"",
+							"basicTest();",
+							"headersTest();",
+							"bodyTest();",
+							"networkTest();",
+							"additionalTest();",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"id": "63020660-4666-4018-b475-be44e7607e6f"
+					}
+				}
+			],
+			"id": "e5c12baa-8f37-4ca1-a96e-b4b7f6037869",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{carInfo}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/expenses"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete current user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "e88457d9-0f0d-4506-8a62-e6bf2c0fe700",
+						"exec": [
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response is an object\", function() {\r",
+							"    pm.expect(pm.response.json()).to.be.an(\"object\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is less than 500ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(500);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Status is ok\", function () {\r",
+							"    pm.expect(jsonData.status).to.eql(\"ok\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"// перевіряємо на відповідність json схемі\r",
+							"const schemaDelete = {\r",
+							"  \"type\": \"object\",\r",
+							"  \"properties\": {\r",
+							"    \"status\": {\r",
+							"      \"type\": \"string\",\r",
+							"      \"enum\": [\"ok\"]\r",
+							"    }\r",
+							"  },\r",
+							"  \"required\": [\"status\"]\r",
+							"};\r",
+							"\r",
+							"pm.test(\"Check JSON schema\", () => {\r",
+							"    pm.response.to.have.jsonSchema(schemaDelete);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "9b45a953-fd05-4a86-8b1c-c7df784f8379",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "{{baseUrl}}/users"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "randomFirstName",
+			"value": ""
+		},
+		{
+			"key": "randomLastName",
+			"value": ""
+		},
+		{
+			"key": "randomEmail",
+			"value": ""
+		},
+		{
+			"key": "randomPassword",
+			"value": ""
+		},
+		{
+			"key": "signupRequestBody",
+			"value": ""
+		},
+		{
+			"key": "carBrandId",
+			"value": ""
+		},
+		{
+			"key": "carBrandName",
+			"value": ""
+		},
+		{
+			"key": "carModelId",
+			"value": ""
+		},
+		{
+			"key": "carModelName",
+			"value": ""
+		},
+		{
+			"key": "carId",
+			"value": ""
+		},
+		{
+			"key": "initialMileage",
+			"value": ""
+		},
+		{
+			"key": "mileage",
+			"value": ""
+		},
+		{
+			"key": "liters",
+			"value": ""
+		},
+		{
+			"key": "totalCost",
+			"value": ""
+		},
+		{
+			"key": "updatedMileageAt",
+			"value": ""
+		},
+		{
+			"key": "carInfo",
+			"value": ""
+		}
+	]
+}
